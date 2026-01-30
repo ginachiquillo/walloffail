@@ -216,6 +216,14 @@ Lovable → Share → Publish
 
 ---
 
+## 
+🎨 Visual Identity 
+
+![Wall of Fail Banner](./public/mock_walloffail.png)
+
+
+---
+
 ## 🧭 Final Statement
 
 If success tells you what to copy,
