@@ -35,6 +35,12 @@ export function AssistedSubmitForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleProcess = async () => {
+    if (!user) {
+      toast.error('Please sign in to use AI-assisted submission.');
+      navigate('/auth');
+      return;
+    }
+
     if (!freeText.trim()) {
       toast.error('Please describe your failure first.');
       return;
@@ -47,7 +53,15 @@ export function AssistedSubmitForm() {
         body: { description: freeText },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle authentication errors specifically
+        if (error.message?.includes('Authentication required') || error.message?.includes('401')) {
+          toast.error('Please sign in to use AI-assisted submission.');
+          navigate('/auth');
+          return;
+        }
+        throw error;
+      }
 
       setStructuredData(data as StructuredFailure);
       toast.success('AI has structured your failure!');
