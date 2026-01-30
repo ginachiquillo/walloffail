@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { FailureStatus } from '@/types';
-import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { AlertTriangle, Skull } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface StatusBadgeProps {
   status: FailureStatus;
@@ -8,25 +9,21 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const config = {
-    to_fail: {
-      label: 'TO FAIL',
-      icon: AlertTriangle,
-      className: 'bg-amber-500 text-amber-50 hover:bg-amber-500/80',
-    },
-    failed: {
-      label: 'FAILED',
-      icon: CheckCircle,
-      className: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-    },
-  };
-
-  const { label, icon: Icon, className: badgeClassName } = config[status];
-
+  const isToFail = status === 'to_fail';
+  const Icon = isToFail ? AlertTriangle : Skull;
+  
   return (
-    <Badge className={`${badgeClassName} ${className}`}>
-      <Icon className="mr-1 h-3 w-3" />
-      {label}
+    <Badge 
+      className={cn(
+        "font-bold uppercase tracking-wider gap-1",
+        isToFail 
+          ? "bg-amber-500/90 text-amber-950 hover:bg-amber-500" 
+          : "bg-destructive/90 text-destructive-foreground hover:bg-destructive",
+        className
+      )}
+    >
+      <Icon className="h-3 w-3" />
+      {isToFail ? 'TO FAIL' : 'FAILED'}
     </Badge>
   );
 }

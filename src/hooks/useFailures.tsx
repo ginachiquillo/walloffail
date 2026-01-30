@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Failure, VerificationStatus } from '@/types';
+import { Failure, VerificationStatus, Profile } from '@/types';
 
 interface FailureFilters {
   domainId?: string;
@@ -17,8 +17,7 @@ export function useFailures(filters?: FailureFilters) {
         .from('failures')
         .select(`
           *,
-          domain:domains(*),
-          profile:profiles(*)
+          domain:domains(*)
         `)
         .order('created_at', { ascending: false });
       
@@ -37,7 +36,27 @@ export function useFailures(filters?: FailureFilters) {
       
       const { data, error } = await query;
       if (error) throw error;
-      return data as Failure[];
+      
+      // Fetch profiles for each failure's user_id
+      const userIds = [...new Set(data?.filter(f => f.user_id).map(f => f.user_id) || [])];
+      let profilesMap: Record<string, Profile> = {};
+      
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('user_id', userIds);
+        
+        profilesMap = (profiles || []).reduce((acc, p) => {
+          acc[p.user_id] = p as Profile;
+          return acc;
+        }, {} as Record<string, Profile>);
+      }
+      
+      return (data || []).map(failure => ({
+        ...failure,
+        profile: failure.user_id ? profilesMap[failure.user_id] : undefined
+      })) as Failure[];
     }
   });
 }
@@ -50,14 +69,26 @@ export function useFailure(id: string) {
         .from('failures')
         .select(`
           *,
-          domain:domains(*),
-          profile:profiles(*)
+          domain:domains(*)
         `)
         .eq('id', id)
         .maybeSingle();
       
       if (error) throw error;
-      return data as Failure | null;
+      if (!data) return null;
+      
+      // Fetch profile if user_id exists
+      let profile: Profile | undefined;
+      if (data.user_id) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', data.user_id)
+          .maybeSingle();
+        profile = profileData as Profile | undefined;
+      }
+      
+      return { ...data, profile } as Failure;
     },
     enabled: !!id
   });
@@ -119,6 +150,26 @@ export function useDeleteFailure() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['failures'] });
+    }
+  });
+}
+
+// Stats hook for the landing page
+export function useFailureStats() {
+  return useQuery({
+    queryKey: ['failure-stats'],
+    queryFn: async () => {
+      const [failuresResult, profilesResult, toFailResult] = await Promise.all([
+        supabase.from('failures').select('id', { count: 'exact', head: true }),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('failures').select('id', { count: 'exact', head: true }).eq('status', 'to_fail'),
+      ]);
+      
+      return {
+        totalFailures: failuresResult.count || 0,
+        verifiedEngineers: profilesResult.count || 0,
+        activeBlockers: toFailResult.count || 0,
+      };
     }
   });
 }
