@@ -70,15 +70,7 @@ export function Header() {
                       <Settings className="mr-2 h-4 w-4" />
                       Settings
                     </DropdownMenuItem>
-                    {isAdmin && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => navigate('/admin')}>
-                          <Shield className="mr-2 h-4 w-4" />
-                          Admin Panel
-                        </DropdownMenuItem>
-                      </>
-                    )}
+                    {/* Admin Panel link hidden until /admin route is implemented */}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
@@ -140,14 +132,7 @@ export function Header() {
                         Settings
                       </Button>
                     </Link>
-                    {isAdmin && (
-                      <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
-                        <Button variant="ghost" className="w-full justify-start">
-                          <Shield className="mr-2 h-4 w-4" />
-                          Admin Panel
-                        </Button>
-                      </Link>
-                    )}
+                    {/* Admin Panel link hidden until /admin route is implemented */}
                     <Button variant="ghost" className="w-full justify-start" onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
                       Sign Out
