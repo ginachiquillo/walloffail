@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,6 +25,19 @@ Do not add motivation, success framing, or conclusions.
 Failure is the outcome.
 
 Return ONLY valid JSON, no markdown or other formatting.`;
+
+// Schema for validating AI-structured failure response
+const structuredFailureSchema = z.object({
+  title: z.string().min(1).max(200),
+  reason_for_project: z.string().min(1).max(2000),
+  problem_statement: z.string().min(1).max(2000),
+  initial_hypothesis: z.string().min(1).max(2000),
+  context_and_constraints: z.string().min(1).max(2000),
+  what_is_failing: z.string().min(1).max(2000),
+  what_was_tried: z.string().min(1).max(2000),
+  why_it_failed: z.string().min(1).max(2000),
+  who_is_relevant_for: z.string().min(1).max(2000),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -117,10 +131,29 @@ serve(async (req) => {
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
     
-    // Parse JSON from response
-    const structured = JSON.parse(content);
+    // Parse and validate JSON from response
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch (parseError) {
+      console.error("Failed to parse AI response as JSON:", parseError);
+      return new Response(
+        JSON.stringify({ error: "AI returned invalid JSON format. Please try again." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    return new Response(JSON.stringify(structured), {
+    // Validate the structure using zod schema
+    const validationResult = structuredFailureSchema.safeParse(parsed);
+    if (!validationResult.success) {
+      console.error("AI response validation failed:", validationResult.error.issues);
+      return new Response(
+        JSON.stringify({ error: "AI response missing required fields. Please try again." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    return new Response(JSON.stringify(validationResult.data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
