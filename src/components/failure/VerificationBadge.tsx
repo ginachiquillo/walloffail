@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { VerificationStatus } from '@/types';
-import { CheckCircle, Clock, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface VerificationBadgeProps {
   status: VerificationStatus;
@@ -9,28 +10,28 @@ interface VerificationBadgeProps {
 
 export function VerificationBadge({ status, className }: VerificationBadgeProps) {
   const config = {
-    verified: {
-      label: 'VERIFIED',
-      icon: CheckCircle,
-      variant: 'default' as const,
-    },
     pending: {
-      label: 'PENDING',
       icon: Clock,
-      variant: 'secondary' as const,
+      label: 'Pending',
+      badgeClassName: 'bg-muted/50 text-muted-foreground border-muted',
+    },
+    verified: {
+      icon: CheckCircle2,
+      label: 'Verified',
+      badgeClassName: 'bg-primary/20 text-primary border-primary/30',
     },
     rejected: {
-      label: 'NOT VERIFIED',
       icon: XCircle,
-      variant: 'destructive' as const,
+      label: 'Rejected',
+      badgeClassName: 'bg-destructive/20 text-destructive border-destructive/30',
     },
   };
 
-  const { label, icon: Icon, variant } = config[status];
+  const { icon: Icon, label, badgeClassName } = config[status];
 
   return (
-    <Badge variant={variant} className={className}>
-      <Icon className="mr-1 h-3 w-3" />
+    <Badge variant="outline" className={cn("gap-1 text-xs", badgeClassName, className)}>
+      <Icon className="h-3 w-3" />
       {label}
     </Badge>
   );

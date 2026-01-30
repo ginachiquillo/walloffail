@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { FailureCard } from '@/components/failure/FailureCard';
-import { DomainFilter } from '@/components/failure/DomainFilter';
+import { DomainTabs } from '@/components/home/DomainTabs';
+import { StatusTabs } from '@/components/home/StatusTabs';
 import { useFailures } from '@/hooks/useFailures';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FailureStatus } from '@/types';
 
 export default function Catalog() {
@@ -19,29 +19,28 @@ export default function Catalog() {
   return (
     <Layout>
       <div className="container py-8">
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="font-serif text-3xl font-bold">Failure Catalog</h1>
+          <h1 className="text-3xl font-black">
+            FAILURE <span className="text-primary text-glow">CATALOG</span>
+          </h1>
           <p className="mt-2 text-muted-foreground">
             Browse documented technical failures across domains.
           </p>
         </div>
 
         {/* Filters */}
-        <div className="mb-8 space-y-4">
-          <div>
-            <h3 className="mb-2 text-sm font-medium">Status</h3>
-            <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as FailureStatus | 'all')}>
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="to_fail">TO FAIL</TabsTrigger>
-                <TabsTrigger value="failed">FAILED</TabsTrigger>
-              </TabsList>
-            </Tabs>
+        <div className="mb-8 space-y-6">
+          {/* Status Filter */}
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <h2 className="text-lg font-semibold">Status Filter</h2>
+            <StatusTabs selectedStatus={statusFilter} onSelect={setStatusFilter} />
           </div>
 
+          {/* Domain Filter */}
           <div>
-            <h3 className="mb-2 text-sm font-medium">Domain</h3>
-            <DomainFilter
+            <h3 className="mb-3 text-sm font-medium text-muted-foreground">Domain</h3>
+            <DomainTabs
               selectedDomainId={selectedDomainId}
               onSelect={setSelectedDomainId}
             />
@@ -52,7 +51,7 @@ export default function Catalog() {
         {isLoading ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="h-64" />
+              <Skeleton key={i} className="h-80" />
             ))}
           </div>
         ) : failures && failures.length > 0 ? (
@@ -62,7 +61,7 @@ export default function Catalog() {
             ))}
           </div>
         ) : (
-          <div className="py-12 text-center">
+          <div className="py-16 text-center border border-dashed border-border rounded-lg">
             <p className="text-muted-foreground">
               No failures found matching your criteria.
             </p>
